@@ -158,7 +158,7 @@ export default function HomePage() {
   if (isGenerating) {
     return (
       <main className="min-h-screen">
-        <Header />
+        <Header title="Genererar slides..." />
         <div className="flex items-center justify-center min-h-[80vh]">
           <div className="text-center">
             <div className="w-16 h-16 bg-gradient-to-r from-knowit-blue-500 to-knowit-purple-500 rounded-full flex items-center justify-center mx-auto mb-4 animate-pulse">
@@ -174,25 +174,21 @@ export default function HomePage() {
 
   return (
     <main className="min-h-screen">
-      <Header />
-      
       {currentStep === 'wizard' && (
         <SlideWizard onComplete={handleWizardComplete} />
       )}
 
       {currentStep === 'preview' && (
-        <div className="container mx-auto px-4 py-8">
-          <div className="mb-6 text-center">
-            <button
-              onClick={handleStartOver}
-              className="px-4 py-2 border-2 border-knowit-blue-600 text-knowit-blue-600 hover:bg-knowit-blue-600 hover:text-white rounded-lg transition-colors"
-            >
-              Skapa ny presentation
-            </button>
+        <>
+          <Header 
+            showBackButton={true} 
+            onBack={handleStartOver}
+            title="Din Presentation"
+          />
+          <div className="container mx-auto px-4 py-8">
+            <KnowitSlideRenderer slides={slides} />
           </div>
-          
-          <KnowitSlideRenderer slides={slides} />
-        </div>
+        </>
       )}
     </main>
   )
