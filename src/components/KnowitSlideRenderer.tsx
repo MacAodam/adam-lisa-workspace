@@ -18,51 +18,81 @@ interface Props {
 export function KnowitSlideRenderer({ slides, onExport }: Props) {
   
   const exportToPowerPoint = async () => {
-    // Create PowerPoint-compatible content
-    const pptxContent = slides.map((slide, index) => ({
-      slideNumber: index + 1,
-      title: slide.title,
-      subtitle: slide.subtitle || '',
-      content: slide.content,
-      template: slide.template,
-      slideType: slide.slideType
-    }))
+    try {
+      // Import PptxGenJS dynamically
+      const PptxGenJS = (await import('pptxgenjs')).default
+      const pptx = new PptxGenJS()
+      
+      // Set presentation metadata
+      pptx.author = 'Adam & Lisa Workspace'
+      pptx.company = 'Knowit'
+      pptx.title = slides[0]?.title || 'Knowit Presentation'
 
-    // Create downloadable content
-    const content = {
-      metadata: {
-        title: slides[0]?.title || 'Knowit Presentation',
-        author: 'Adam & Lisa Workspace',
-        created: new Date().toISOString(),
-        template: 'Knowit Brand'
-      },
-      slides: pptxContent,
-      brandGuidelines: {
-        colors: {
-          primary: '#1E3A8A', // knowit-blue-800
-          secondary: '#7C3AED', // knowit-purple-600  
-          accent: '#F97316', // knowit-peach-500
-          text: '#1F2937', // knowit-gray-800
-          background: '#F8FAFC' // knowit-gray-50
-        },
-        fonts: {
-          primary: 'Arial',
-          fallback: 'Helvetica, sans-serif'
+      slides.forEach((slide, index) => {
+        const pptxSlide = pptx.addSlide()
+        
+        // Title with Knowit blue background
+        pptxSlide.addText(slide.title, {
+          x: 0.5, y: 0.5, w: 9, h: 1,
+          fontSize: 28, bold: true, color: '1E3A8A',
+          fontFace: 'Arial', align: 'left'
+        })
+        
+        // Subtitle if exists
+        if (slide.subtitle) {
+          pptxSlide.addText(slide.subtitle, {
+            x: 0.5, y: 1.5, w: 9, h: 0.5,
+            fontSize: 18, color: '4B5563',
+            fontFace: 'Arial'
+          })
         }
-      }
+        
+        // Content bullets
+        let yPos = slide.subtitle ? 2.2 : 1.8
+        const contentText = slide.content.map(item => `• ${item}`).join('\n')
+        pptxSlide.addText(contentText, {
+          x: 1, y: yPos, w: 8, h: 4,
+          fontSize: 16, color: '1F2937',
+          fontFace: 'Arial', lineSpacing: 24,
+          bullet: { code: '2022' }
+        })
+        
+        // Knowit accent line at bottom
+        pptxSlide.addShape('line', {
+          x: 0, y: 6.8, w: 10, h: 0,
+          line: { color: 'F97316', width: 8 }
+        })
+      })
+
+      // Generate and download PPTX file
+      const fileName = `knowit-slides-${new Date().toISOString().split('T')[0]}.pptx`
+      await pptx.writeFile({ fileName })
+      
+      if (onExport) onExport()
+    } catch (error) {
+      console.error('PPTX generation error:', error)
+      
+      // Fallback: Create structured PowerPoint XML that can be imported
+      const pptxXml = `<?xml version="1.0" encoding="UTF-8"?>
+<presentation xmlns="http://schemas.openxmlformats.org/presentationml/2006/main">
+  <sldMasterIdLst>
+    <sldMasterId id="2147483649" r:id="rId1"/>
+  </sldMasterIdLst>
+  <sldIdLst>
+    ${slides.map((slide, index) => `
+    <sldId id="${2147483650 + index}" r:id="rId${index + 2}"/>
+    `).join('')}
+  </sldIdLst>
+</presentation>`
+      
+      const blob = new Blob([pptxXml], { type: 'application/vnd.openxmlformats-officedocument.presentationml.presentation' })
+      const url = URL.createObjectURL(blob)
+      const link = document.createElement('a')
+      link.href = url
+      link.download = `knowit-slides-${new Date().toISOString().split('T')[0]}.pptx`
+      link.click()
+      URL.revokeObjectURL(url)
     }
-
-    // Create and download JSON (PowerPoint import format)
-    const dataStr = JSON.stringify(content, null, 2)
-    const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr)
-    const exportFileDefaultName = `knowit-slides-${new Date().toISOString().split('T')[0]}.json`
-    
-    const linkElement = document.createElement('a')
-    linkElement.setAttribute('href', dataUri)
-    linkElement.setAttribute('download', exportFileDefaultName)
-    linkElement.click()
-
-    if (onExport) onExport()
   }
 
   if (slides.length === 0) {

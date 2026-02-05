@@ -66,7 +66,7 @@ export function SlideWizard({ onComplete }: Props) {
       subtitle: "Ungefärligt antal",
       field: 'slideCount',
       type: 'slider',
-      min: 3,
+      min: 1,
       max: 20
     },
     {
@@ -78,10 +78,11 @@ export function SlideWizard({ onComplete }: Props) {
     },
     {
       title: "Inspiration eller referenser?",
-      subtitle: "Tidigare slides, stil, konkreta exempel (valfritt)",
+      subtitle: "Ladda upp PowerPoint, Excel, Word-filer eller beskriv (valfritt)",
       field: 'inspiration',
-      type: 'textarea',
-      placeholder: "Referera till tidigare presentation, specifik layout, etc..."
+      type: 'file-upload',
+      placeholder: "Referera till tidigare presentation, specifik layout, etc...",
+      acceptedFiles: '.pptx,.ppt,.xlsx,.xls,.docx,.doc'
     }
   ]
 
@@ -184,7 +185,7 @@ export function SlideWizard({ onComplete }: Props) {
                   <span className="text-4xl font-bold text-knowit-blue-600">
                     {request.slideCount}
                   </span>
-                  <span className="text-lg text-knowit-gray-500 ml-2">slides</span>
+                  <span className="text-lg text-knowit-gray-500 ml-2">slide{request.slideCount > 1 ? 's' : ''}</span>
                 </div>
                 <input
                   type="range"
@@ -197,6 +198,60 @@ export function SlideWizard({ onComplete }: Props) {
                 <div className="flex justify-between text-sm text-knowit-gray-500">
                   <span>{currentStepData.min}</span>
                   <span>{currentStepData.max}</span>
+                </div>
+              </div>
+            )}
+
+            {currentStepData.type === 'file-upload' && (
+              <div className="space-y-4">
+                <div className="border-2 border-dashed border-knowit-gray-300 rounded-lg p-8 text-center hover:border-knowit-blue-400 transition-colors">
+                  <input
+                    type="file"
+                    multiple
+                    accept={currentStepData.acceptedFiles}
+                    onChange={(e) => {
+                      const files = Array.from(e.target.files || [])
+                      const fileNames = files.map(f => f.name).join(', ')
+                      handleInputChange(fileNames)
+                    }}
+                    className="hidden"
+                    id="file-upload"
+                  />
+                  <label
+                    htmlFor="file-upload"
+                    className="cursor-pointer flex flex-col items-center"
+                  >
+                    <div className="w-12 h-12 bg-knowit-blue-100 rounded-full flex items-center justify-center mb-3">
+                      <FileText className="w-6 h-6 text-knowit-blue-600" />
+                    </div>
+                    <p className="font-medium text-knowit-gray-900 mb-1">
+                      Välj filer eller dra och släpp
+                    </p>
+                    <p className="text-sm text-knowit-gray-500">
+                      PowerPoint (.pptx), Excel (.xlsx), Word (.docx)
+                    </p>
+                  </label>
+                </div>
+                
+                {request.inspiration && (
+                  <div className="bg-green-50 p-3 rounded-lg border border-green-200">
+                    <p className="text-sm text-green-800">
+                      <strong>Uppladdade filer:</strong> {request.inspiration}
+                    </p>
+                  </div>
+                )}
+
+                <div className="border-t pt-4">
+                  <label className="block text-sm font-medium text-knowit-gray-700 mb-1">
+                    Eller beskriv din inspiration
+                  </label>
+                  <textarea
+                    value={typeof request.inspiration === 'string' && !request.inspiration.includes('.') ? request.inspiration : ''}
+                    onChange={(e) => handleInputChange(e.target.value)}
+                    placeholder={currentStepData.placeholder}
+                    rows={3}
+                    className="w-full p-3 border border-knowit-gray-300 rounded-lg focus:border-knowit-blue-500 focus:ring-0 transition-colors"
+                  />
                 </div>
               </div>
             )}
