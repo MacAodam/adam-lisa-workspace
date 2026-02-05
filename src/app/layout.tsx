@@ -1,5 +1,7 @@
 import type { Metadata, Viewport } from 'next'
 import { Inter } from 'next/font/google'
+import { FeedbackWidget } from '@/components/FeedbackWidget'
+import { FeedbackDashboard } from '@/components/FeedbackDashboard'
 import './globals.css'
 
 const inter = Inter({ 
@@ -31,8 +33,10 @@ export default function RootLayout({
       <body className={`${inter.className} antialiased`}>
         <div className="min-h-screen bg-gradient-to-br from-knowit-gray-50 to-knowit-blue-50">
           {children}
+          <FeedbackWidget />
+          <FeedbackDashboard />
         </div>
       </body>
     </html>
   )
-}console.log('Deployment fix Thu Feb  5 10:21:10 AM UTC 2026');
+}
