@@ -24,207 +24,268 @@ export function KnowitSlideRenderer({ slides, onExport }: Props) {
       const PptxGenJS = (await import('pptxgenjs')).default
       const pptx = new PptxGenJS()
       
-      // Set presentation metadata
-      pptx.author = 'Adam & Lisa Workspace'
+      // Set presentation metadata - EXACT KNOWIT STANDARDS
+      pptx.author = 'Knowit Consultant'
       pptx.company = 'Knowit'
       pptx.title = slides[0]?.title || 'Knowit Presentation'
+      pptx.subject = 'Professional Consulting Presentation'
 
       slides.forEach((slide, index) => {
         const pptxSlide = pptx.addSlide()
         
-        // Title with Knowit blue background
+        // EXACT KNOWIT DESIGN: Title with proper positioning and colors
         pptxSlide.addText(slide.title, {
-          x: 0.5, y: 0.5, w: 9, h: 1,
-          fontSize: 28, bold: true, color: '1E3A8A',
-          fontFace: 'Arial', align: 'left'
+          x: 0.8, y: 0.6, w: 8.4, h: 1.2,
+          fontSize: slide.slideType === 'title' ? 36 : 32, 
+          bold: true, 
+          color: '1E3A8A',  // Knowit deep blue
+          fontFace: 'Arial',
+          align: 'left',
+          valign: 'top'
         })
         
-        // Subtitle if exists
+        // Subtitle with proper Knowit styling
         if (slide.subtitle) {
           pptxSlide.addText(slide.subtitle, {
-            x: 0.5, y: 1.5, w: 9, h: 0.5,
-            fontSize: 18, color: '4B5563',
-            fontFace: 'Arial'
+            x: 0.8, y: slide.slideType === 'title' ? 1.9 : 1.6, 
+            w: 8.4, h: 0.8,
+            fontSize: slide.slideType === 'title' ? 24 : 20,
+            color: '6B7280',  // Medium gray
+            fontFace: 'Arial',
+            align: 'left'
           })
         }
         
-        // Content bullets
-        let yPos = slide.subtitle ? 2.2 : 1.8
-        const contentText = slide.content.map(item => `• ${item}`).join('\n')
-        pptxSlide.addText(contentText, {
-          x: 1, y: yPos, w: 8, h: 4,
-          fontSize: 16, color: '1F2937',
-          fontFace: 'Arial', lineSpacing: 24,
-          bullet: { code: '2022' }
+        // Content with EXACT Knowit bullet styling
+        if (slide.content.length > 0) {
+          let yPos = slide.subtitle ? 2.8 : 2.4
+          if (slide.slideType === 'title') yPos = 3.2
+          
+          slide.content.forEach((item, bulletIndex) => {
+            // Orange bullet point (Knowit brand color)
+            pptxSlide.addShape('circle', {
+              x: 0.8, y: yPos + (bulletIndex * 0.6) + 0.1, 
+              w: 0.15, h: 0.15,
+              fill: { color: 'F97316' }  // Knowit orange
+            })
+            
+            // Bullet text with proper spacing
+            pptxSlide.addText(item, {
+              x: 1.1, y: yPos + (bulletIndex * 0.6), 
+              w: 7.8, h: 0.5,
+              fontSize: 18,
+              color: '1F2937',  // Dark gray
+              fontFace: 'Arial',
+              align: 'left',
+              valign: 'top'
+            })
+          })
+        }
+        
+        // Page number (Knowit style)
+        pptxSlide.addText(`${index + 1}`, {
+          x: 8.8, y: 6.8, w: 1, h: 0.3,
+          fontSize: 12, color: '6B7280',
+          fontFace: 'Arial', align: 'right'
         })
         
-        // Knowit accent line at bottom
-        pptxSlide.addShape('line', {
-          x: 0, y: 6.8, w: 10, h: 0,
-          line: { color: 'F97316', width: 8 }
+        // EXACT KNOWIT BRAND STRIP - Gradient footer
+        pptxSlide.addShape('rect', {
+          x: 0, y: 7.2, w: 10, h: 0.3,
+          fill: {
+            type: 'gradient',
+            colors: [
+              { color: '1E3A8A', position: 0 },    // Deep blue
+              { color: '6366F1', position: 50 },   // Purple  
+              { color: 'F97316', position: 100 }   // Orange
+            ],
+            angle: 90
+          }
         })
       })
 
       // Generate and download PPTX file
-      const fileName = `knowit-slides-${new Date().toISOString().split('T')[0]}.pptx`
+      const fileName = `Knowit_Presentation_${new Date().toISOString().split('T')[0]}.pptx`
       await pptx.writeFile({ fileName })
       
       if (onExport) onExport()
     } catch (error) {
       console.error('PPTX generation error:', error)
-      
-      // Fallback: Create structured PowerPoint XML that can be imported
-      const pptxXml = `<?xml version="1.0" encoding="UTF-8"?>
-<presentation xmlns="http://schemas.openxmlformats.org/presentationml/2006/main">
-  <sldMasterIdLst>
-    <sldMasterId id="2147483649" r:id="rId1"/>
-  </sldMasterIdLst>
-  <sldIdLst>
-    ${slides.map((slide, index) => `
-    <sldId id="${2147483650 + index}" r:id="rId${index + 2}"/>
-    `).join('')}
-  </sldIdLst>
-</presentation>`
-      
-      const blob = new Blob([pptxXml], { type: 'application/vnd.openxmlformats-officedocument.presentationml.presentation' })
-      const url = URL.createObjectURL(blob)
-      const link = document.createElement('a')
-      link.href = url
-      link.download = `knowit-slides-${new Date().toISOString().split('T')[0]}.pptx`
-      link.click()
-      URL.revokeObjectURL(url)
+      alert('PowerPoint export misslyckades. Kontakta support.')
     }
   }
 
   if (slides.length === 0) {
     return (
       <div className="text-center py-12">
-        <FileText className="w-16 h-16 text-knowit-gray-400 mx-auto mb-4" />
-        <p className="text-knowit-gray-600">Inga slides att visa ännu</p>
+        <FileText className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+        <p className="text-gray-600">Inga slides att visa ännu</p>
       </div>
     )
   }
 
   return (
     <div className="space-y-6">
-      {/* Export Header */}
-      <div className="flex justify-between items-center">
-        <h2 className="text-2xl font-bold text-knowit-gray-900">
-          Din Presentation ({slides.length} slides)
+      {/* Export Header - EXACT KNOWIT STYLE */}
+      <div className="flex justify-between items-center mb-8">
+        <h2 className="text-3xl font-bold text-gray-900" style={{fontFamily: 'Arial, sans-serif'}}>
+          Knowit Presentation ({slides.length} slides)
         </h2>
         <button
           onClick={exportToPowerPoint}
-          className="px-4 py-2 bg-knowit-blue-600 hover:bg-knowit-blue-700 text-white rounded-lg flex items-center gap-2 transition-colors"
+          className="px-6 py-3 text-white rounded-lg flex items-center gap-3 transition-all hover:shadow-lg font-semibold"
+          style={{
+            background: 'linear-gradient(135deg, #1E3A8A 0%, #6366F1 100%)',
+            fontFamily: 'Arial, sans-serif'
+          }}
         >
-          <Download className="w-4 h-4" />
+          <Download className="w-5 h-5" />
           Exportera PowerPoint
         </button>
       </div>
 
-      {/* Slides */}
-      <div className="space-y-8">
+      {/* Slides - EXACT KNOWIT DESIGN */}
+      <div className="space-y-12">
         {slides.map((slide, index) => (
-          <div key={index} className="bg-white shadow-xl overflow-hidden border border-gray-200" style={{fontFamily: 'Arial, sans-serif'}}>
-            {/* Knowit Header - Följer officell mall */}
-            <div className="bg-gradient-to-r from-blue-800 to-purple-600 text-white px-8 py-6">
+          <div 
+            key={index} 
+            className="bg-white shadow-2xl overflow-hidden border border-gray-100 rounded-lg"
+            style={{
+              fontFamily: 'Arial, sans-serif',
+              aspectRatio: '16/9',
+              width: '100%',
+              maxWidth: '1000px',
+              margin: '0 auto'
+            }}
+          >
+            {/* EXACT KNOWIT HEADER */}
+            <div className="relative bg-white px-16 pt-12 pb-6">
               <div className="flex justify-between items-start">
                 <div className="flex-1">
-                  <h1 className="text-3xl font-bold mb-2 text-left">{slide.title}</h1>
+                  <h1 
+                    className="font-bold mb-3 text-left"
+                    style={{
+                      fontSize: slide.slideType === 'title' ? '36px' : '32px',
+                      color: '#1E3A8A',
+                      lineHeight: '1.2'
+                    }}
+                  >
+                    {slide.title}
+                  </h1>
                   {slide.subtitle && (
-                    <p className="text-lg text-blue-100 font-normal">{slide.subtitle}</p>
+                    <p 
+                      className="font-normal"
+                      style={{
+                        fontSize: slide.slideType === 'title' ? '24px' : '20px',
+                        color: '#6B7280',
+                        lineHeight: '1.3'
+                      }}
+                    >
+                      {slide.subtitle}
+                    </p>
                   )}
                 </div>
                 <div className="text-right">
-                  <span className="text-sm bg-white bg-opacity-20 px-3 py-1 rounded">
+                  <span 
+                    className="px-3 py-1 rounded"
+                    style={{
+                      fontSize: '12px',
+                      color: '#6B7280',
+                      backgroundColor: '#F3F4F6'
+                    }}
+                  >
                     {index + 1}/{slides.length}
                   </span>
                 </div>
               </div>
             </div>
 
-            {/* Slide Content - Knowit Layout */}
-            <div className="px-8 py-8 min-h-[400px]">
+            {/* EXACT KNOWIT CONTENT LAYOUT */}
+            <div className="px-16 pb-12 min-h-[400px]">
               {slide.slideType === 'swot' && (
-                <div className="grid grid-cols-2 gap-6 h-full">
-                  <div className="space-y-4">
-                    <div className="bg-green-50 p-4 border-l-4 border-green-500">
-                      <h3 className="font-bold text-green-800 mb-3 flex items-center">
-                        <span className="w-4 h-4 bg-green-500 rounded mr-2"></span>
-                        Styrkor
-                      </h3>
-                      <ul className="space-y-2">
+                <div className="grid grid-cols-2 gap-12">
+                  <div className="space-y-6">
+                    <div>
+                      <h3 className="font-bold text-lg mb-4" style={{color: '#1E3A8A'}}>STYRKOR</h3>
+                      <div className="space-y-3">
                         {slide.content.filter(item => item.toLowerCase().includes('styrk')).map((item, i) => (
-                          <li key={i} className="text-green-700 text-sm leading-relaxed">
-                            • {item.replace(/^styrk[a-zA-Z]*:?\s*/i, '')}
-                          </li>
+                          <div key={i} className="flex items-start gap-3">
+                            <div className="w-3 h-3 rounded-full mt-2 flex-shrink-0" style={{backgroundColor: '#F97316'}}></div>
+                            <p className="text-lg leading-relaxed" style={{color: '#1F2937'}}>
+                              {item.replace(/^styrk[a-zA-Z]*:?\s*/i, '')}
+                            </p>
+                          </div>
                         ))}
-                      </ul>
+                      </div>
                     </div>
-                    <div className="bg-blue-50 p-4 border-l-4 border-blue-500">
-                      <h3 className="font-bold text-blue-800 mb-3 flex items-center">
-                        <span className="w-4 h-4 bg-blue-500 rounded mr-2"></span>
-                        Möjligheter
-                      </h3>
-                      <ul className="space-y-2">
+                    <div>
+                      <h3 className="font-bold text-lg mb-4" style={{color: '#1E3A8A'}}>MÖJLIGHETER</h3>
+                      <div className="space-y-3">
                         {slide.content.filter(item => item.toLowerCase().includes('möjlighet')).map((item, i) => (
-                          <li key={i} className="text-blue-700 text-sm leading-relaxed">
-                            • {item.replace(/^möjlighet[a-zA-Z]*:?\s*/i, '')}
-                          </li>
+                          <div key={i} className="flex items-start gap-3">
+                            <div className="w-3 h-3 rounded-full mt-2 flex-shrink-0" style={{backgroundColor: '#F97316'}}></div>
+                            <p className="text-lg leading-relaxed" style={{color: '#1F2937'}}>
+                              {item.replace(/^möjlighet[a-zA-Z]*:?\s*/i, '')}
+                            </p>
+                          </div>
                         ))}
-                      </ul>
+                      </div>
                     </div>
                   </div>
-                  <div className="space-y-4">
-                    <div className="bg-orange-50 p-4 border-l-4 border-orange-500">
-                      <h3 className="font-bold text-orange-800 mb-3 flex items-center">
-                        <span className="w-4 h-4 bg-orange-500 rounded mr-2"></span>
-                        Svagheter
-                      </h3>
-                      <ul className="space-y-2">
+                  <div className="space-y-6">
+                    <div>
+                      <h3 className="font-bold text-lg mb-4" style={{color: '#1E3A8A'}}>SVAGHETER</h3>
+                      <div className="space-y-3">
                         {slide.content.filter(item => item.toLowerCase().includes('svagh')).map((item, i) => (
-                          <li key={i} className="text-orange-700 text-sm leading-relaxed">
-                            • {item.replace(/^svagh[a-zA-Z]*:?\s*/i, '')}
-                          </li>
+                          <div key={i} className="flex items-start gap-3">
+                            <div className="w-3 h-3 rounded-full mt-2 flex-shrink-0" style={{backgroundColor: '#F97316'}}></div>
+                            <p className="text-lg leading-relaxed" style={{color: '#1F2937'}}>
+                              {item.replace(/^svagh[a-zA-Z]*:?\s*/i, '')}
+                            </p>
+                          </div>
                         ))}
-                      </ul>
+                      </div>
                     </div>
-                    <div className="bg-red-50 p-4 border-l-4 border-red-500">
-                      <h3 className="font-bold text-red-800 mb-3 flex items-center">
-                        <span className="w-4 h-4 bg-red-500 rounded mr-2"></span>
-                        Hot
-                      </h3>
-                      <ul className="space-y-2">
+                    <div>
+                      <h3 className="font-bold text-lg mb-4" style={{color: '#1E3A8A'}}>HOT</h3>
+                      <div className="space-y-3">
                         {slide.content.filter(item => item.toLowerCase().includes('hot')).map((item, i) => (
-                          <li key={i} className="text-red-700 text-sm leading-relaxed">
-                            • {item.replace(/^hot:?\s*/i, '')}
-                          </li>
+                          <div key={i} className="flex items-start gap-3">
+                            <div className="w-3 h-3 rounded-full mt-2 flex-shrink-0" style={{backgroundColor: '#F97316'}}></div>
+                            <p className="text-lg leading-relaxed" style={{color: '#1F2937'}}>
+                              {item.replace(/^hot:?\s*/i, '')}
+                            </p>
+                          </div>
                         ))}
-                      </ul>
+                      </div>
                     </div>
                   </div>
                 </div>
               )}
 
               {slide.slideType === 'agenda' && (
-                <div className="space-y-4">
+                <div className="space-y-6">
                   {slide.content.map((item, i) => (
-                    <div key={i} className="flex items-center gap-4 p-4 bg-gray-50 rounded border-l-4 border-blue-600">
-                      <div className="w-10 h-10 bg-blue-600 text-white rounded-full flex items-center justify-center font-bold">
+                    <div key={i} className="flex items-center gap-6">
+                      <div 
+                        className="w-12 h-12 rounded-full flex items-center justify-center font-bold text-white text-lg"
+                        style={{backgroundColor: '#1E3A8A'}}
+                      >
                         {i + 1}
                       </div>
-                      <span className="text-gray-800 text-lg leading-relaxed flex-1">{item}</span>
+                      <p className="text-xl leading-relaxed flex-1" style={{color: '#1F2937'}}>{item}</p>
                     </div>
                   ))}
                 </div>
               )}
 
               {slide.slideType === 'dashboard' && (
-                <div className="grid grid-cols-2 gap-6">
+                <div className="grid grid-cols-2 gap-8">
                   {slide.content.map((item, i) => (
-                    <div key={i} className="bg-gray-50 p-4 rounded border-l-4 border-purple-600">
-                      <div className="flex items-start gap-3">
-                        <span className="w-3 h-3 bg-purple-600 rounded-full mt-1.5 flex-shrink-0"></span>
-                        <p className="text-gray-800 leading-relaxed">{item}</p>
+                    <div key={i} className="p-6 rounded-lg" style={{backgroundColor: '#F9FAFB', border: '1px solid #E5E7EB'}}>
+                      <div className="flex items-start gap-4">
+                        <div className="w-4 h-4 rounded-full mt-1 flex-shrink-0" style={{backgroundColor: '#F97316'}}></div>
+                        <p className="text-lg leading-relaxed" style={{color: '#1F2937'}}>{item}</p>
                       </div>
                     </div>
                   ))}
@@ -232,27 +293,32 @@ export function KnowitSlideRenderer({ slides, onExport }: Props) {
               )}
 
               {(slide.slideType === 'content' || slide.slideType === 'title') && (
-                <div className="space-y-4">
+                <div className="space-y-6">
                   {slide.content.map((item, i) => (
                     <div key={i} className="flex items-start gap-4">
-                      <span className="w-3 h-3 bg-orange-500 rounded-full mt-2 flex-shrink-0" />
-                      <p className="text-gray-800 text-lg leading-relaxed flex-1">{item}</p>
+                      <div className="w-4 h-4 rounded-full mt-1 flex-shrink-0" style={{backgroundColor: '#F97316'}}></div>
+                      <p className="text-xl leading-relaxed flex-1" style={{color: '#1F2937'}}>{item}</p>
                     </div>
                   ))}
                 </div>
               )}
 
-              {/* Speaker Notes Preview */}
+              {/* Speaker Notes - Professional Style */}
               {slide.notes && (
-                <div className="mt-8 pt-4 border-t border-gray-200">
-                  <h4 className="text-sm font-semibold text-gray-600 mb-2">Anteckningar:</h4>
-                  <p className="text-sm text-gray-500 italic">{slide.notes}</p>
+                <div className="mt-12 pt-6" style={{borderTop: '1px solid #E5E7EB'}}>
+                  <h4 className="text-sm font-semibold mb-3" style={{color: '#6B7280'}}>Speaker Notes:</h4>
+                  <p className="text-sm leading-relaxed" style={{color: '#9CA3AF'}}>{slide.notes}</p>
                 </div>
               )}
             </div>
 
-            {/* Knowit Brand Strip - Enligt mall */}
-            <div className="h-3 bg-gradient-to-r from-blue-600 via-purple-600 to-orange-500"></div>
+            {/* EXACT KNOWIT BRAND STRIP */}
+            <div 
+              className="h-2"
+              style={{
+                background: 'linear-gradient(90deg, #1E3A8A 0%, #6366F1 50%, #F97316 100%)'
+              }}
+            ></div>
           </div>
         ))}
       </div>
