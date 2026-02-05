@@ -1,0 +1,54 @@
+/* Inter font from Google Fonts */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700;800&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 224 71.4% 4.1%;
+  }
+
+  .dark {
+    --background: 224 71.4% 4.1%;
+    --foreground: 0 0% 100%;
+  }
+
+  * {
+    @apply border-gray-200;
+  }
+
+  body {
+    @apply bg-white text-gray-900;
+    font-feature-settings: "rlig" 1, "calt" 1;
+  }
+
+  .dark body {
+    @apply bg-gray-900 text-white;
+  }
+}
+
+@layer components {
+  .gradient-knowit {
+    @apply bg-gradient-to-r from-knowit-blue-500 via-knowit-purple-500 to-knowit-blue-600;
+  }
+
+  .gradient-knowit-peach {
+    @apply bg-gradient-to-r from-knowit-peach-400 to-knowit-peach-600;
+  }
+
+  .card-knowit {
+    @apply bg-white shadow-lg rounded-xl border border-knowit-gray-200;
+  }
+
+  .button-primary {
+    @apply bg-gradient-to-r from-knowit-blue-500 to-knowit-purple-500 text-white px-6 py-3 rounded-lg font-medium hover:shadow-lg transition-all duration-200 transform hover:scale-105;
+  }
+
+  .button-secondary {
+    @apply bg-knowit-gray-100 text-knowit-gray-800 px-6 py-3 rounded-lg font-medium hover:bg-knowit-gray-200 transition-all duration-200;
+  }
+}
