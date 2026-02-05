@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { Header } from '@/components/Header'
 import { SlideWizard } from '@/components/SlideWizard'
 import { KnowitSlideRenderer } from '@/components/KnowitSlideRenderer'
+import { generateSlidesWithOpus } from '@/lib/slideGenerator'
 
 interface SlideRequest {
   purpose: string
@@ -18,8 +19,9 @@ interface SlideData {
   title: string
   subtitle?: string
   content: string[]
-  slideType: 'title' | 'content' | 'swot' | 'agenda'
-  template: 'knowit-blue' | 'knowit-purple'
+  slideType: 'title' | 'content' | 'swot' | 'agenda' | 'dashboard'
+  layout: 'knowit-standard' | 'knowit-title' | 'knowit-two-column'
+  notes?: string
 }
 
 export default function HomePage() {
@@ -39,107 +41,150 @@ export default function HomePage() {
   }
 
   const generateSlides = async (request: SlideRequest): Promise<SlideData[]> => {
-    // Simulate AI generation (in real implementation, this would call an API)
-    await new Promise(resolve => setTimeout(resolve, 2000))
-    
+    // Use Opus 4.5 for professional slide generation following Knowit template
+    try {
+      const slides = await generateSlidesWithOpus(request)
+      return slides
+    } catch (error) {
+      console.error('Failed to generate slides with Opus:', error)
+      // Fallback to local generation if API fails
+      return generateFallbackSlides(request)
+    }
+  }
+
+  const generateFallbackSlides = (request: SlideRequest): SlideData[] => {
     const slides: SlideData[] = []
     
-    // Title slide
+    // Title slide following Knowit template
     slides.push({
       title: extractTitleFromPurpose(request.purpose),
-      subtitle: `Presentation för ${request.audience}`,
+      subtitle: getAudienceString(request.audience),
       content: [
         `Syfte: ${request.purpose}`,
+        `Målgrupp: ${getAudienceString(request.audience)}`,
         `Datum: ${new Date().toLocaleDateString('sv-SE')}`,
-        'Skapad med Adam & Lisa Workspace'
+        'Knowit Ascend'
       ],
       slideType: 'title',
-      template: 'knowit-blue'
+      layout: 'knowit-title',
+      notes: `Presentationens syfte: ${request.purpose}`
     })
 
+    // Generate based on type with proper Knowit formatting
     if (request.slideType === 'swot') {
       slides.push({
         title: 'SWOT-analys',
         content: [
-          'Styrka: Stark marknadsposition',
-          'Styrka: Erfaren team',
-          'Svaghet: Begränsade resurser', 
-          'Svaghet: Teknisk skuld',
-          'Möjlighet: Ny marknad',
-          'Möjlighet: AI-integration',
-          'Hot: Konkurrens',
-          'Hot: Regelförändringar'
+          'Styrkor: Marknadsposition, erfaren team, etablerade processer',
+          'Svagheter: Begränsade resurser, teknisk skuld, kompetensluckor',
+          'Möjligheter: AI-integration, nya marknadssegment, strategiska partnerskap',
+          'Hot: Ökad konkurrens, regelförändringar, ekonomisk osäkerhet'
         ],
         slideType: 'swot',
-        template: 'knowit-blue'
+        layout: 'knowit-standard',
+        notes: 'Genomgå systematiskt varje kategori med konkreta exempel'
       })
     }
 
     if (request.slideType === 'situation-complication') {
       slides.push({
-        title: 'Situation',
+        title: 'Situation - Nuläge',
         content: [
-          'Nuvarande läge och utmaningar',
-          'Marknadsdynamik och trender',
-          'Interna faktorer som påverkar'
+          'Marknadsläge: Aktuella trender och utveckling',
+          'Organisationens position: Resurser och kapacitet',  
+          'Pågående initiativ: Status och preliminära resultat',
+          'Intressenter: Förväntningar och krav'
         ],
         slideType: 'content',
-        template: 'knowit-blue'
+        layout: 'knowit-standard',
+        notes: 'Etablera gemensam förståelse av nuläget med data och exempel'
       })
       
       slides.push({
-        title: 'Complication',
+        title: 'Utmaning - Vad som måste adresseras',
         content: [
-          'Identifierade problemområden',
-          'Riskfaktorer som behöver adresseras',
-          'Tidskritiska beslut'
+          'Kritiska problemområden som hindrar framsteg',
+          'Riskfaktorer som kan påverka resultatet negativt',
+          'Tidskritiska beslutspunkter som närmar sig',
+          'Resurskonflikter och prioriteringsbehov'
         ],
         slideType: 'content',
-        template: 'knowit-purple'
+        layout: 'knowit-standard',
+        notes: 'Fokus på kritiska utmaningar och konsekvenserna av inaction'
       })
     }
 
     if (request.slideType === 'agenda') {
+      const totalTime = Math.max(30, request.slideCount * 3)
       slides.push({
         title: 'Agenda',
         content: [
-          'Välkomst och introduktion',
-          'Genomgång av huvudpunkter',
-          'Diskussion och frågor',
-          'Nästa steg och uppföljning',
-          'Avslutning'
+          'Välkomst och syfte (5 min)',
+          `Genomgång huvudpunkter (${totalTime - 15} min)`,
+          'Diskussion och frågor (5 min)',
+          'Sammanfattning och nästa steg (5 min)'
         ],
         slideType: 'agenda',
-        template: 'knowit-blue'
+        layout: 'knowit-standard',
+        notes: `Total tid: ${totalTime} minuter. Håll tight schema för diskussion`
       })
     }
 
-    // Add content slides based on details
+    if (request.slideType === 'dashboard') {
+      slides.push({
+        title: 'Dashboard - Nyckeltal',
+        content: [
+          'KPI 1: Status och trend (target vs actual)',
+          'KPI 2: Utveckling över tid med prognos', 
+          'KPI 3: Jämförelse mot benchmark',
+          'Sammanfattande bedömning och indikationer'
+        ],
+        slideType: 'dashboard',
+        layout: 'knowit-two-column',
+        notes: 'Fokusera på insights och actionable takeaways'
+      })
+    }
+
+    // Add detail slides
     if (request.details.trim()) {
       const detailPoints = request.details.split('\n').filter(p => p.trim())
       if (detailPoints.length > 0) {
         slides.push({
           title: 'Viktiga punkter',
-          content: detailPoints,
-          slideType: 'content',
-          template: 'knowit-blue'
+          content: detailPoints.slice(0, 5),
+          slideType: 'content', 
+          layout: 'knowit-standard',
+          notes: 'Fördjupa varje punkt med konkreta exempel'
         })
       }
     }
 
     // Summary slide
     slides.push({
-      title: 'Sammanfattning',
+      title: 'Sammanfattning & nästa steg',
       content: [
-        'Nyckelinsikter från presentationen',
-        'Rekommenderade åtgärder',
-        'Nästa steg i processen'
+        'Nyckelinsikter från genomgången',
+        'Prioriterade handlingsområden',
+        'Föreslagna nästa steg med tidplan',
+        'Uppföljning och ansvar'
       ],
       slideType: 'content',
-      template: 'knowit-purple'
+      layout: 'knowit-standard',
+      notes: 'Avsluta med tydliga åtgärder och ansvar'
     })
 
     return slides.slice(0, request.slideCount)
+  }
+
+  const getAudienceString = (audience: string): string => {
+    switch (audience) {
+      case 'styrelse': return 'För styrelse och ledning'
+      case 'kollegor': return 'Teamgenomgång'
+      case 'kunder': return 'Kundpresentation'
+      case 'workshop': return 'Workshop-session'
+      case 'allmän': return 'Allmän presentation'
+      default: return 'Presentation'
+    }
   }
 
   const extractTitleFromPurpose = (purpose: string): string => {

@@ -6,8 +6,9 @@ interface SlideData {
   title: string
   subtitle?: string
   content: string[]
-  slideType: 'title' | 'content' | 'swot' | 'agenda'
-  template: 'knowit-blue' | 'knowit-purple'
+  slideType: 'title' | 'content' | 'swot' | 'agenda' | 'dashboard'
+  layout: 'knowit-standard' | 'knowit-title' | 'knowit-two-column'
+  notes?: string
 }
 
 interface Props {
@@ -123,88 +124,135 @@ export function KnowitSlideRenderer({ slides, onExport }: Props) {
       {/* Slides */}
       <div className="space-y-8">
         {slides.map((slide, index) => (
-          <div key={index} className="bg-white rounded-lg shadow-lg overflow-hidden border border-knowit-gray-200">
-            {/* Slide Header */}
-            <div className="bg-gradient-to-r from-knowit-blue-600 to-knowit-purple-600 text-white p-4">
+          <div key={index} className="bg-white shadow-xl overflow-hidden border border-gray-200" style={{fontFamily: 'Arial, sans-serif'}}>
+            {/* Knowit Header - Följer officell mall */}
+            <div className="bg-gradient-to-r from-blue-800 to-purple-600 text-white px-8 py-6">
               <div className="flex justify-between items-start">
                 <div className="flex-1">
-                  <h3 className="text-xl font-bold mb-1">{slide.title}</h3>
+                  <h1 className="text-3xl font-bold mb-2 text-left">{slide.title}</h1>
                   {slide.subtitle && (
-                    <p className="text-knowit-blue-100">{slide.subtitle}</p>
+                    <p className="text-lg text-blue-100 font-normal">{slide.subtitle}</p>
                   )}
                 </div>
-                <span className="bg-white bg-opacity-20 px-3 py-1 rounded-full text-sm">
-                  {index + 1}
-                </span>
+                <div className="text-right">
+                  <span className="text-sm bg-white bg-opacity-20 px-3 py-1 rounded">
+                    {index + 1}/{slides.length}
+                  </span>
+                </div>
               </div>
             </div>
 
-            {/* Slide Content */}
-            <div className="p-6">
+            {/* Slide Content - Knowit Layout */}
+            <div className="px-8 py-8 min-h-[400px]">
               {slide.slideType === 'swot' && (
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="bg-green-50 p-4 rounded-lg border border-green-200">
-                    <h4 className="font-semibold text-green-800 mb-2">Styrkor</h4>
-                    <ul className="text-sm text-green-700 space-y-1">
-                      {slide.content.filter(item => item.includes('Styrka')).map((item, i) => (
-                        <li key={i}>• {item.replace('Styrka: ', '')}</li>
-                      ))}
-                    </ul>
+                <div className="grid grid-cols-2 gap-6 h-full">
+                  <div className="space-y-4">
+                    <div className="bg-green-50 p-4 border-l-4 border-green-500">
+                      <h3 className="font-bold text-green-800 mb-3 flex items-center">
+                        <span className="w-4 h-4 bg-green-500 rounded mr-2"></span>
+                        Styrkor
+                      </h3>
+                      <ul className="space-y-2">
+                        {slide.content.filter(item => item.toLowerCase().includes('styrk')).map((item, i) => (
+                          <li key={i} className="text-green-700 text-sm leading-relaxed">
+                            • {item.replace(/^styrk[a-zA-Z]*:?\s*/i, '')}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                    <div className="bg-blue-50 p-4 border-l-4 border-blue-500">
+                      <h3 className="font-bold text-blue-800 mb-3 flex items-center">
+                        <span className="w-4 h-4 bg-blue-500 rounded mr-2"></span>
+                        Möjligheter
+                      </h3>
+                      <ul className="space-y-2">
+                        {slide.content.filter(item => item.toLowerCase().includes('möjlighet')).map((item, i) => (
+                          <li key={i} className="text-blue-700 text-sm leading-relaxed">
+                            • {item.replace(/^möjlighet[a-zA-Z]*:?\s*/i, '')}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
                   </div>
-                  <div className="bg-yellow-50 p-4 rounded-lg border border-yellow-200">
-                    <h4 className="font-semibold text-yellow-800 mb-2">Svagheter</h4>
-                    <ul className="text-sm text-yellow-700 space-y-1">
-                      {slide.content.filter(item => item.includes('Svaghet')).map((item, i) => (
-                        <li key={i}>• {item.replace('Svaghet: ', '')}</li>
-                      ))}
-                    </ul>
-                  </div>
-                  <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
-                    <h4 className="font-semibold text-blue-800 mb-2">Möjligheter</h4>
-                    <ul className="text-sm text-blue-700 space-y-1">
-                      {slide.content.filter(item => item.includes('Möjlighet')).map((item, i) => (
-                        <li key={i}>• {item.replace('Möjlighet: ', '')}</li>
-                      ))}
-                    </ul>
-                  </div>
-                  <div className="bg-red-50 p-4 rounded-lg border border-red-200">
-                    <h4 className="font-semibold text-red-800 mb-2">Hot</h4>
-                    <ul className="text-sm text-red-700 space-y-1">
-                      {slide.content.filter(item => item.includes('Hot')).map((item, i) => (
-                        <li key={i}>• {item.replace('Hot: ', '')}</li>
-                      ))}
-                    </ul>
+                  <div className="space-y-4">
+                    <div className="bg-orange-50 p-4 border-l-4 border-orange-500">
+                      <h3 className="font-bold text-orange-800 mb-3 flex items-center">
+                        <span className="w-4 h-4 bg-orange-500 rounded mr-2"></span>
+                        Svagheter
+                      </h3>
+                      <ul className="space-y-2">
+                        {slide.content.filter(item => item.toLowerCase().includes('svagh')).map((item, i) => (
+                          <li key={i} className="text-orange-700 text-sm leading-relaxed">
+                            • {item.replace(/^svagh[a-zA-Z]*:?\s*/i, '')}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                    <div className="bg-red-50 p-4 border-l-4 border-red-500">
+                      <h3 className="font-bold text-red-800 mb-3 flex items-center">
+                        <span className="w-4 h-4 bg-red-500 rounded mr-2"></span>
+                        Hot
+                      </h3>
+                      <ul className="space-y-2">
+                        {slide.content.filter(item => item.toLowerCase().includes('hot')).map((item, i) => (
+                          <li key={i} className="text-red-700 text-sm leading-relaxed">
+                            • {item.replace(/^hot:?\s*/i, '')}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
                   </div>
                 </div>
               )}
 
               {slide.slideType === 'agenda' && (
-                <div className="space-y-3">
+                <div className="space-y-4">
                   {slide.content.map((item, i) => (
-                    <div key={i} className="flex items-center gap-3 p-3 bg-knowit-gray-50 rounded-lg">
-                      <span className="w-8 h-8 bg-knowit-blue-600 text-white rounded-full flex items-center justify-center text-sm font-semibold">
+                    <div key={i} className="flex items-center gap-4 p-4 bg-gray-50 rounded border-l-4 border-blue-600">
+                      <div className="w-10 h-10 bg-blue-600 text-white rounded-full flex items-center justify-center font-bold">
                         {i + 1}
-                      </span>
-                      <span className="text-knowit-gray-800">{item}</span>
+                      </div>
+                      <span className="text-gray-800 text-lg leading-relaxed flex-1">{item}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {slide.slideType === 'dashboard' && (
+                <div className="grid grid-cols-2 gap-6">
+                  {slide.content.map((item, i) => (
+                    <div key={i} className="bg-gray-50 p-4 rounded border-l-4 border-purple-600">
+                      <div className="flex items-start gap-3">
+                        <span className="w-3 h-3 bg-purple-600 rounded-full mt-1.5 flex-shrink-0"></span>
+                        <p className="text-gray-800 leading-relaxed">{item}</p>
+                      </div>
                     </div>
                   ))}
                 </div>
               )}
 
               {(slide.slideType === 'content' || slide.slideType === 'title') && (
-                <div className="space-y-3">
+                <div className="space-y-4">
                   {slide.content.map((item, i) => (
-                    <div key={i} className="flex items-start gap-3">
-                      <span className="w-2 h-2 bg-knowit-peach-500 rounded-full mt-2 flex-shrink-0" />
-                      <p className="text-knowit-gray-700 leading-relaxed">{item}</p>
+                    <div key={i} className="flex items-start gap-4">
+                      <span className="w-3 h-3 bg-orange-500 rounded-full mt-2 flex-shrink-0" />
+                      <p className="text-gray-800 text-lg leading-relaxed flex-1">{item}</p>
                     </div>
                   ))}
                 </div>
               )}
+
+              {/* Speaker Notes Preview */}
+              {slide.notes && (
+                <div className="mt-8 pt-4 border-t border-gray-200">
+                  <h4 className="text-sm font-semibold text-gray-600 mb-2">Anteckningar:</h4>
+                  <p className="text-sm text-gray-500 italic">{slide.notes}</p>
+                </div>
+              )}
             </div>
 
-            {/* Knowit Brand Footer */}
-            <div className="h-2 bg-gradient-to-r from-knowit-blue-500 via-knowit-purple-500 to-knowit-peach-500"></div>
+            {/* Knowit Brand Strip - Enligt mall */}
+            <div className="h-3 bg-gradient-to-r from-blue-600 via-purple-600 to-orange-500"></div>
           </div>
         ))}
       </div>
